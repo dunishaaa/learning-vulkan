@@ -4,19 +4,28 @@ CFLAGSD = -g -std=c++17
 
 LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
+FILES = main.cpp HelloTriangleApplication.cpp
+
 VulkanTest: main.cpp
-	g++ $(CFLAGS) -o VulkanTest main.cpp $(LDFLAGS)
+	g++ $(CFLAGS) -o VulkanTest $(FILES) $(LDFLAGS)
 
 VulkanDebug: main.cpp
-	g++ $(CFLAGSD) -o VulkanDebug main.cpp $(LDFLAGS)
+	g++ $(CFLAGSD) -o VulkanDebug $(FILES) $(LDFLAGS)
 
 .PHONY: test clean
+
+VulkanTuto:
+	g++ $(CFLAGS) -o VulkanTuto main1.cpp $(LDFLAGS)
+
 
 test: VulkanTest
 	./VulkanTest
 
 debug: VulkanDebug
 	./VulkanDebug
+
+tuto: VulkanTuto
+	./VulkanTuto
 
 clean:
 	rm -f VulkanTest
