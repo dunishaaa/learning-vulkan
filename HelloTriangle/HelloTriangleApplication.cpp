@@ -154,7 +154,7 @@ void HelloTriangleApplication::initVulkan() {
   createInstance();
   setupDebugMessenger();
   createSurface();
-  pickPychiscalDevice();
+  pickPhysicalDevice();
   createLogicalDevice();
   createSwapChain();
 }
@@ -167,6 +167,7 @@ void HelloTriangleApplication::createSwapChain() {
   VkPresentModeKHR presentMode =
       chooseSwapPresentMode(swapChainSupport.presentModes);
   VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
+
   uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
   if (swapChainSupport.capabilities.maxImageCount > 0 &&
       imageCount > swapChainSupport.capabilities.maxImageCount) {
@@ -175,6 +176,7 @@ void HelloTriangleApplication::createSwapChain() {
   VkSwapchainCreateInfoKHR createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   createInfo.surface = surface;
+
   createInfo.minImageCount = imageCount;
   createInfo.imageFormat = surfaceFormat.format;
   createInfo.imageColorSpace = surfaceFormat.colorSpace;
@@ -192,19 +194,15 @@ void HelloTriangleApplication::createSwapChain() {
     createInfo.pQueueFamilyIndices = queueFamilyIndices;
   } else {
     createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-    createInfo.queueFamilyIndexCount = 0;     // Optional
-    createInfo.pQueueFamilyIndices = nullptr; // Optional
   }
+
   createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
   createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
+
   createInfo.oldSwapchain = VK_NULL_HANDLE;
 
-  if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create swap chain!");
-  }
   if (vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to create swap chain!");
@@ -221,15 +219,17 @@ void HelloTriangleApplication::createSwapChain() {
 void HelloTriangleApplication::createSurface() {
   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
       VK_SUCCESS) {
-    throw std::runtime_error("fialed to create window surface!");
+    throw std::runtime_error("failled to create window surface!");
   }
 }
 void HelloTriangleApplication::createLogicalDevice() {
+
   QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 
   std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
   std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(),
                                             indices.presentFamily.value()};
+
   float queuePriority = 1.0f;
   for (uint32_t queueFamily : uniqueQueueFamilies) {
     VkDeviceQueueCreateInfo queueCreateInfo{};
@@ -239,12 +239,6 @@ void HelloTriangleApplication::createLogicalDevice() {
     queueCreateInfo.pQueuePriorities = &queuePriority;
     queueCreateInfos.push_back(queueCreateInfo);
   }
-
-  VkDeviceQueueCreateInfo queueCreateInfo{};
-  queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-  queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-  queueCreateInfo.queueCount = 1;
-  queueCreateInfo.pQueuePriorities = &queuePriority;
 
   VkPhysicalDeviceFeatures deviceFeatures{};
 
@@ -260,6 +254,7 @@ void HelloTriangleApplication::createLogicalDevice() {
   createInfo.enabledExtensionCount =
       static_cast<uint32_t>(deviceExtensions.size());
   createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
   if (enableValidationLayers) {
     createInfo.enabledLayerCount =
         static_cast<uint32_t>(validationLayers.size());
@@ -267,6 +262,7 @@ void HelloTriangleApplication::createLogicalDevice() {
   } else {
     createInfo.enabledLayerCount = 0;
   }
+
   if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to create logical device!");
@@ -278,12 +274,14 @@ void HelloTriangleApplication::createLogicalDevice() {
 
 bool HelloTriangleApplication::isDeviceSuitable(VkPhysicalDevice device) {
   QueueFamilyIndices indices = findQueueFamilies(device);
+
   bool extensionsSupported = checkDeviceExtensionSupport(device);
+
   bool swapChainAdequate = false;
   if (extensionsSupported) {
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
     swapChainAdequate = !swapChainSupport.formats.empty() &&
-                        swapChainSupport.presentModes.empty();
+                        !swapChainSupport.presentModes.empty();
   }
   return indices.isComplete() && extensionsSupported && swapChainAdequate;
 }
@@ -347,14 +345,16 @@ bool HelloTriangleApplication::checkDeviceExtensionSupport(
   return requiredExtensions.empty();
 }
 
-void HelloTriangleApplication::pickPychiscalDevice() {
+void HelloTriangleApplication::pickPhysicalDevice() {
   uint32_t deviceCount = 0;
   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-  std::vector<VkPhysicalDevice> devices(deviceCount);
-  vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-  if (!deviceCount) {
+  if (deviceCount == 0) {
     throw std::runtime_error("failed to find GPUs with Vulkan support!");
   }
+
+  std::vector<VkPhysicalDevice> devices(deviceCount);
+  vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+
   for (const auto &device : devices) {
     if (isDeviceSuitable(device)) {
       physicalDevice = device;

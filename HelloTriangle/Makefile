@@ -6,10 +6,10 @@ LDFLAGS = -lglfw -lvulkan -ldl -lpthread -lX11 -lXxf86vm -lXrandr -lXi
 
 FILES = main.cpp HelloTriangleApplication.cpp
 
-VulkanTest: main.cpp
+VulkanTest: main.cpp HelloTriangleApplication.cpp
 	g++ $(CFLAGS) -o VulkanTest $(FILES) $(LDFLAGS)
 
-VulkanDebug: main.cpp
+VulkanDebug: main.cpp HelloTriangleApplication.cpp
 	g++ $(CFLAGSD) -o VulkanDebug $(FILES) $(LDFLAGS)
 
 .PHONY: test clean
@@ -28,4 +28,4 @@ tuto: VulkanTuto
 	./VulkanTuto
 
 clean:
-	rm -f VulkanTest
+	rm -f VulkanTest VulkanDebug VulkanTuto
