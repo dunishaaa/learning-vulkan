@@ -10,15 +10,6 @@
 
 #include <cstdlib>
 
-VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
-    const VkAllocationCallbacks *pAllocator,
-    VkDebugUtilsMessengerEXT *pDebugMessenger);
-
-void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-                                   VkDebugUtilsMessengerEXT debugMessenger,
-                                   const VkAllocationCallbacks *pAllocator);
-
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphicsFamily;
   std::optional<uint32_t> presentFamily;
@@ -33,56 +24,98 @@ struct SwapChainSupportDetails {
   std::vector<VkPresentModeKHR> presentModes;
 };
 
+VkResult CreateDebugUtilsMessengerEXT(
+    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    const VkAllocationCallbacks *pAllocator,
+    VkDebugUtilsMessengerEXT *pDebugMessenger);
+
+void DestroyDebugUtilsMessengerEXT(VkInstance instance,
+                                   VkDebugUtilsMessengerEXT debugMessenger,
+                                   const VkAllocationCallbacks *pAllocator);
+
 class HelloTriangleApplication {
 public:
   void run();
 
 private:
-  VkQueue graphicsQueue;
-  VkQueue presentQueue;
   VkInstance instance;
-  VkSurfaceKHR surface;
-
-  VkSwapchainKHR swapChain;
-  std::vector<VkImage> swapChainImages;
-  VkFormat swapChainImageFormat;
-  VkExtent2D swapChainExtent;
 
   VkDebugUtilsMessengerEXT debugMessenger;
+
   GLFWwindow *window;
+
+  VkSurfaceKHR surface;
+
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+
   VkDevice device;
+
+  VkQueue graphicsQueue;
+  VkQueue presentQueue;
+
+  VkSwapchainKHR swapChain;
+  VkFormat swapChainImageFormat;
+  VkExtent2D swapChainExtent;
+  std::vector<VkImage> swapChainImages;
+  std::vector<VkImageView> swapChainImageViews;
+  std::vector<VkFramebuffer> swapChainFramebuffers;
+
+  VkRenderPass renderPass;
+
+  VkPipelineLayout pipelineLayout;
+  VkPipeline graphicsPipeline;
+
+  VkCommandPool commandPool;
+  VkCommandBuffer commandBuffer;
+
+  VkSemaphore imageAvailableSemaphore;
+  VkSemaphore renderFinishedSemaphore;
+  VkFence inFlightFence;
+
+  void initWindow();
+  void initVulkan();
+
+  void mainLoop();
+  void cleanup();
+  void drawFrame();
 
   static VKAPI_ATTR VkBool32 VKAPI_CALL
   debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
                 VkDebugUtilsMessageTypeFlagsEXT messageType,
                 const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData,
                 void *pUserData);
-  void initWindow();
   bool checkValidationLayerSupport();
   std::vector<const char *> getRequieredExtension();
 
   void createInstance();
-
-  void initVulkan();
-
+  void setupDebugMessenger();
   void createSurface();
+  void pickPhysicalDevice();
   void createLogicalDevice();
   void createSwapChain();
+  void createImageViews();
+  void createRenderPass();
+  void createGraphicsPipeline();
+  void createFramebuffers();
+  void createCommandPool();
+  void createCommandBuffer();
+  void createSyncObjects();
+
+  void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+  void populateDebugMessengerCreateInfo(
+      VkDebugUtilsMessengerCreateInfoEXT &createInfo);
 
   bool isDeviceSuitable(VkPhysicalDevice device);
   bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+
+  VkShaderModule createShaderModule(const std::vector<char> &code);
+
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-  void pickPhysicalDevice();
   QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-  void populateDebugMessengerCreateInfo(
-      VkDebugUtilsMessengerCreateInfoEXT &createInfo);
   VkSurfaceFormatKHR chooseSwapSurfaceFormat(
       const std::vector<VkSurfaceFormatKHR> &availableFormats);
   VkPresentModeKHR chooseSwapPresentMode(
       const std::vector<VkPresentModeKHR> &availablePresentModes);
   VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities);
-  void setupDebugMessenger();
-  void mainLoop();
-  void cleanup();
 };
